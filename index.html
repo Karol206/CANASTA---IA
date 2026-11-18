@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CANASTA IA - Compra inteligentemente</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f7f6;
+            color: #24332c;
+        }
+
+        /* BARRA SUPERIOR */
+        header {
+            background: white;
+            padding: 18px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #176b4d;
+        }
+
+        .logo span {
+            color: #e9a227;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #555;
+            margin-left: 25px;
+            font-size: 14px;
+        }
+
+        /* PANTALLAS */
+        .screen {
+            display: none;
+            min-height: calc(100vh - 75px);
+            padding: 50px 8%;
+        }
+
+        .active {
+            display: block;
+        }
+
+        /* INICIO */
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+        }
+
+        .hero-text {
+            max-width: 600px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e5f5ee;
+            color: #176b4d;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 55px;
+            line-height: 1.05;
+            margin-bottom: 20px;
+        }
+
+        h1 span {
+            color: #176b4d;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .hero-card {
+            background: white;
+            width: 350px;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        }
+
+        .cart-icon {
+            font-size: 65px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .mini-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .mini-total {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* BOTONES */
+        .btn {
+            border: none;
+            background: #176b4d;
+            color: white;
+            padding: 15px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background: #0f553b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e9a227;
+            color: #222;
+        }
+
+        .btn-secondary:hover {
+            background: #d89319;
+        }
+
+        /* FORMULARIO */
+        .container {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title h2 {
+            font-size: 35px;
+            margin-bottom: 10px;
+        }
+
+        .title p {
+            color: #777;
+        }
+
+        .form-card {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .product {
+            border: 2px solid #eee;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .product:hover {
+            border-color: #176b4d;
+        }
+
+        .product input {
+            margin-right: 8px;
+        }
+
+        .product small {
+            display: block;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding-top: 100px;
+        }
+
+        .loader {
+            width: 70px;
+            height: 70px;
+            border: 7px solid #ddd;
+            border-top: 7px solid #176b4d;
+            border-radius: 50%;
+            margin: 30px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading h2 {
+            margin-bottom: 10px;
+        }
+
+        .loading p {
+            color: #777;
+        }
+
+        /* RESULTADO */
+        .result-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        .result-card h3 {
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 18px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item small {
+            display: block;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .budget-box {
+            background: #eaf7f0;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .budget-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .saving {
+            background: #fff5dc;
+            border-left: 5px solid #e9a227;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .saving strong {
+            color: #b57908;
+        }
+
+        .recommendation {
+            margin-top: 20px;
+            background: #f3f8f5;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .recommendation button {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .success {
+            color: #176b4d;
+            font-weight: bold;
+        }
+
+        /* RESPONSIVE */
+        @media(max-width: 800px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 30px;
+            }
+
+            h1 {
+                font-size: 40px;
+            }
+
+            .products {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-card {
+                width: 100%;
+            }
+        }
+
+        @media(max-width: 500px) {
+            .products {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">CANASTA<span>IA</span></div>
+
+    <nav>
+        <a href="#" onclick="showScreen('home')">Inicio</a>
+        <a href="#" onclick="showScreen('create')">Crear canasta</a>
+    </nav>
+</header>
+
+
+<!-- ================= INICIO ================= -->
+
+<section id="home" class="screen active">
+
+    <div class="hero">
+
+        <div class="hero-text">
+
+            <div class="tag">✨ COMPRA INTELIGENTEMENTE</div>
+
+            <h1>
+                Tu dinero.<br>
+                Tu <span>canasta.</span><br>
+                Mejor decisión.
+            </h1>
+
+            <p>
+                CANASTA IA te ayuda a organizar tus compras de acuerdo
+                con tu presupuesto y encontrar alternativas más económicas.
+            </p>
+
+            <button class="btn" onclick="showScreen('create')">
+                ✨ Crear mi canasta
+            </button>
+
+        </div>
+
+        <div class="hero-card">
+
+            <div class="cart-icon">🛒</div>
+
+            <h3>Ejemplo de canasta</h3>
+
+            <div class="mini-item">
+                <span>🍚 Arroz</span>
+                <strong>$2.50</strong>
+            </div>
+
+            <div class="mini-item">
+                <span>🥛 Leche</span>
+                <strong>$1.20</strong>
+            </div>
+
+            <div class="mini-item">
+                <span>🥚 Huevos</span>
+                <strong>$3.00</strong>
+            </div>
+
+            <div class="mini-item">
+                <span>🥣 Cereal</span>
+                <strong>$3.50</strong>
+            </div>
+
+            <div class="mini-total">
+                <span>Total</span>
+                <span>$10.20</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CREAR CANASTA ================= -->
+
+<section id="create" class="screen">
+
+    <div class="container">
+
+        <div class="title">
+            <h2>🛒 Crea tu canasta</h2>
+            <p>Cuéntanos cuánto puedes gastar y qué necesitas.</p>
+        </div>
+
+        <div class="form-card">
+
+            <label>💰 ¿Cuál es tu presupuesto?</label>
+
+            <input
+                type="number"
+                id="budget"
+                placeholder="Ejemplo: 25"
+                min="1"
+            >
+
+            <label>🛍️ ¿Qué necesitas comprar?</label>
+
+            <div class="products">
+
+                <label class="product">
+                    <input type="checkbox" value="Arroz" data-price="2.50">
+                    🍚 Arroz
+                    <small>$2.50</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Leche" data-price="1.20">
+                    🥛 Leche
+                    <small>$1.20</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Huevos" data-price="3.00">
+                    🥚 Huevos
+                    <small>$3.00</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Cereal" data-price="4.50">
+                    🥣 Cereal
+                    <small>$4.50</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Atún" data-price="2.80">
+                    🐟 Atún
+                    <small>$2.80</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Pan" data-price="1.50">
+                    🍞 Pan
+                    <small>$1.50</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Frutas" data-price="3.50">
+                    🍎 Frutas
+                    <small>$3.50</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Yogur" data-price="2.20">
+                    🥛 Yogur
+                    <small>$2.20</small>
+                </label>
+
+                <label class="product">
+                    <input type="checkbox" value="Pollo" data-price="5.00">
+                    🍗 Pollo
+                    <small>$5.00</small>
+                </label>
+
+            </div>
+
+            <button class="btn" onclick="generateBasket()">
+                🤖 Crear mi canasta
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= IA ANALIZANDO ================= -->
+
+<section id="loading" class="screen">
+
+    <div class="loading">
+
+        <h2>🤖 CANASTA IA está analizando...</h2>
+
+        <div class="loader"></div>
+
+        <p id="loadingText">
+            Comparando opciones...
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ================= RESULTADO ================= -->
+
+<section id="result" class="screen">
+
+    <div class="container">
+
+        <div class="title">
+
+            <h2>✨ Tu canasta inteligente</h2>
+
+            <p>
+                Hemos organizado tus opciones para ayudarte a aprovechar mejor tu presupuesto.
+            </p>
+
+        </div>
+
+        <div class="result-grid">
+
+            <div class="result-card">
+
+                <h3>🛒 Productos recomendados</h3>
+
+                <div id="basketItems"></div>
+
+                <div class="total">
+                    <span>Total</span>
+                    <span id="total">$0.00</span>
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <div class="result-card">
+
+                    <h3>💰 Tu presupuesto</h3>
+
+                    <div class="budget-box">
+
+                        <div class="budget-line">
+                            <span>Presupuesto</span>
+                            <strong id="budgetResult">$0.00</strong>
+                        </div>
+
+                        <div class="budget-line">
+                            <span>Total compra</span>
+                            <strong id="purchaseResult">$0.00</strong>
+                        </div>
+
+                        <hr>
+
+                        <div class="budget-line">
+                            <span>Disponible</span>
+                            <strong class="success" id="remaining">$0.00</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="result-card saving">
+
+                    <h3>💡 Recomendación IA</h3>
+
+                    <p id="recommendation">
+                        Analizando tus opciones...
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <button class="btn btn-secondary" onclick="showScreen('create')">
+            🔄 Crear otra canasta
+        </button>
+
+    </div>
+
+</section>
+
+
+<script>
+
+    /* CAMBIAR DE PANTALLA */
+
+    function showScreen(screenId) {
+
+        const screens = document.querySelectorAll(".screen");
+
+        screens.forEach(screen => {
+            screen.classList.remove("active");
+        });
+
+        document.getElementById(screenId).classList.add("active");
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }
+
+
+    /* CREAR CANASTA */
+
+    function generateBasket() {
+
+        const budget = parseFloat(
+            document.getElementById("budget").value
+        );
+
+        if (!budget || budget <= 0) {
+
+            alert("Por favor, ingresa un presupuesto válido.");
+
+            return;
+        }
+
+
+        const selectedProducts = [];
+
+        const checkboxes = document.querySelectorAll(
+            ".product input:checked"
+        );
+
+
+        checkboxes.forEach(item => {
+
+            selectedProducts.push({
+
+                name: item.value,
+
+                price: parseFloat(item.dataset.price)
+
+            });
+
+        });
+
+
+        if (selectedProducts.length === 0) {
+
+            alert("Selecciona al menos un producto.");
+
+            return;
+        }
+
+
+        /* MOSTRAR PANTALLA DE IA */
+
+        showScreen("loading");
+
+
+        let messages = [
+
+            "Comparando opciones...",
+
+            "Analizando tu presupuesto...",
+
+            "Buscando alternativas económicas...",
+
+            "Optimizando tu canasta..."
+
+        ];
+
+
+        let i = 0;
+
+
+        const interval = setInterval(() => {
+
+            document.getElementById("loadingText").textContent =
+                messages[i];
+
+            i++;
+
+            if (i >= messages.length) {
+
+                clearInterval(interval);
+
+            }
+
+        }, 500);
+
+
+        /* DESPUÉS DE 2 SEGUNDOS MOSTRAR RESULTADO */
+
+        setTimeout(() => {
+
+            createResult(
+                budget,
+                selectedProducts
+            );
+
+            showScreen("result");
+
+        }, 2300);
+
+    }
+
+
+    /* GENERAR RESULTADO */
+
+    function createResult(budget, products) {
+
+        let finalProducts = [];
+
+        let total = 0;
+
+
+        /*
+        Intentamos mantener todos los productos
+        dentro del presupuesto.
+        */
+
+        products.forEach(product => {
+
+            if (total + product.price <= budget) {
+
+                finalProducts.push(product);
+
+                total += product.price;
+
+            }
+
+        });
+
+
+        /*
+        Si ningún producto entra en el presupuesto
+        */
+
+        if (finalProducts.length === 0) {
+
+            finalProducts.push(products[0]);
+
+            total = products[0].price;
+
+        }
+
+
+        /* MOSTRAR PRODUCTOS */
+
+        const basketItems =
+            document.getElementById("basketItems");
+
+        basketItems.innerHTML = "";
+
+
+        finalProducts.forEach(product => {
+
+            basketItems.innerHTML += `
+
+                <div class="cart-item">
+
+                    <div>
+
+                        <strong>${product.name}</strong>
+
+                        <small>
+                            Opción recomendada
+                        </small>
+
+                    </div>
+
+                    <strong>
+                        $${product.price.toFixed(2)}
+                    </strong>
+
+                </div>
+
+            `;
+
+        });
+
+
+        /* CALCULAR DISPONIBLE */
+
+        const remaining = budget - total;
+
+
+        document.getElementById("total").textContent =
+            "$" + total.toFixed(2);
+
+        document.getElementById("budgetResult").textContent =
+            "$" + budget.toFixed(2);
+
+        document.getElementById("purchaseResult").textContent =
+            "$" + total.toFixed(2);
+
+        document.getElementById("remaining").textContent =
+            "$" + remaining.toFixed(2);
+
+
+        /* RECOMENDACIÓN */
+
+        let recommendation = "";
+
+
+        if (remaining > 5) {
+
+            recommendation =
+                `Tu compra está dentro del presupuesto. Te quedan $${remaining.toFixed(2)} disponibles. Puedes agregar otro producto que necesites.`;
+
+        }
+
+        else if (remaining > 0) {
+
+            recommendation =
+                `¡Buena elección! Aprovechaste tu presupuesto y todavía tienes $${remaining.toFixed(2)} disponibles.`;
+
+        }
+
+        else {
+
+            recommendation =
+                `Tu presupuesto está prácticamente completo. La IA priorizó los productos seleccionados para evitar superar tu límite.`;
+
+        }
+
+
+        document.getElementById("recommendation").textContent =
+            recommendation;
+
+    }
+
+</script>
+
+</body>
+</html>
